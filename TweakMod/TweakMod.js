@@ -7,5 +7,5 @@
 
     <!-- Include one of jTable styles. -->
  
-    GDT.loadJs(['mods/TweakMod/source/source.js','mods/TweakMod/stacktrace.js'], ready, error);
+    GDT.loadJs(['mods/TweakMod/source/source.js'], ready, error);
 })();
