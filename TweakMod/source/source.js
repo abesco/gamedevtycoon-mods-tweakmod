@@ -14,9 +14,18 @@ Last Update:          December 25th, 2013
 **********************************************************************************************************************************************************
 */
 
+
+
+/// --> New Ideas = 
+//      ContextMenu opening time / delay (especially when a lot of mods are available)
+//      Create Right Menu system
+
+
 var TweakMod = {};
 (function () {   
-   var self                                = this;
+    //UltimateLib.Storage.clearCache();
+    
+    var self                                = this;
     var notificationsSelectAllButtonState   = false;
     var initialized                         = false;
     
@@ -38,7 +47,7 @@ var TweakMod = {};
     };
     
     // Tweaks the in-game settings UI using tabs for a better experience
-    var tweakedSettingsUI = (function (tweakMod) {
+    self.TweakedSettingsUI = (function (tweakMod) {
         var self            = this;
         var setupDone       = false;
         var settingsPanel   = null; // settingsPanel   = $('#settingsPanel');
@@ -59,17 +68,20 @@ var TweakMod = {};
             }
 
             // Create the tab contents.
-            // UltimateLib.Configuration.addTab('TweakModNotifications', "Notifications", self.createTabNotifications());
+            UltimateLib.Configuration.addTab('TweakModConfigurationTabNotifications', "Notifications", self.getContentTabNotifications());
 
             // --> self.createTabMisc();
             // self.createTabDebug();
-                        
+
             // Read settings values into UI
-            // self.updateValues();
-            
+            self.updateValues();
+                                          
             // Setup event handlers
-            // self.setupEventHandlers();
+            self.setupEventHandlers();
             
+            // Apply settings to the underlying UltimateLib.Notifications class
+            self.applySettings();
+
             /*
 
                     
@@ -89,21 +101,48 @@ var TweakMod = {};
             
         };      
         
-        // Update the values in the settings screen
+        self.applySettings = function(){
+            // Apply typewriter
+            UltimateLib.Notifications.typeWriterDelay = TweakModSettings.settings.notifications.typeWriterDelay;
+            
+            // Apply notifications speed up targets
+            UltimateLib.Notifications.Items = TweakModSettings.settings.notifications.speedUpTargets;
+        };
+        
+        // Update the values in the settings screen 
         self.updateValues = function() {
+
             // Set default values for gamespeed
             $('#TweakModSettingsGamespeedText').html('Game Speed (Normal = 10): ' + (GameManager._oldTimeModifier * 10));
 
             // Set default values for notifications
             $('#TweakModSettingsTypeWriterDelayNumberBox').val(TweakModSettings.settings.notifications.typeWriterDelay);
-            $('#TweakModSettingsSpeedUpNotificationsCheckBox').val(TweakModSettings.settings.notifications.speedUp);
+            
+            if(TweakModSettings.settings.notifications.speedUp){
+                $('#TweakModSettingsSpeedUpNotificationsCheckBox').attr('checked','true');
+                $.each(TweakModSettings.settings.notifications.speedUpTargets, function(index, element){
+                    if(element.asOverlay){
+                        $('#TweakModNotificationSpeedUpTarget-'+element.id).attr('checked','true');
+                    }
+                    else {
+                        $('#TweakModNotificationSpeedUpTarget-'+element.id).removeAttr('checked');
+                    }
+                });
+                             
+            }
+            else {
+                $('#TweakModSettingsSpeedUpNotificationsCheckBox').removeAttr('checked');
+            }
 
             // Set default values for conferences
-            $('#TweakModSettingsConferencesSelect').val(TweakModSettings.settings.notifications.conferenceSpeedUpMode);      
+            $('#TweakModSettingsTabNotificationsConferenceSelect').val(TweakModSettings.settings.notifications.conferenceSpeedUpMode);      
             
-            // Set game speed value
+            // Update values for reviews
+            $('#TweakModSettingsTabNotificationsReviewsSelect').val(TweakModSettings.settings.notifications.reviewSpeedUpMode);      
+            
+            // Update values for game speed 
             $("#TweakModSettingsGamespeedSlider").slider({value : TweakModSettings.settings.game.gamespeed});
-                              
+
         };     
                 
         // START --- Private members ---
@@ -192,28 +231,50 @@ var TweakMod = {};
         };      
         
         // TAB: Notification Settings Tab. Allows to control Notification related tweaks 
-        self.createTabNotifications = function(){
+        self.getContentTabNotifications = function(){
             // Tab: Notifications        
-            var tempHtmlNotifications = '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size:11px">';
+ 
+            var tempHtmlNotifications = '<table width="100%" border="0" cellpadding="0" cellspacing="0">';
+                tempHtmlNotifications += '<tbody>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top" width="35%"><h3>Typewriter delay</h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><input id="TweakModSettingsTypeWriterDelayNumberBox" type="number" name="typeWriterDelay" value="" min="0" max="250" style="width:80px"></td>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '<tr><td colspan="2"><hr></td></tr>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top"><h3>Speed up</h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><h4><input id="TweakModSettingsSpeedUpNotificationsCheckBox" type="checkbox" name="speedUpNotifications" value="true" style="width:14px">Enable</h4>';
+                tempHtmlNotifications += '<div id="TweakModSettingsSpeedUpNotificationsList" style="display:'+(TweakModSettings.settings.notifications.speedUp ? '' : 'none')+'; width:200px; height:120px; overflow: auto; border:1px solid #777777; background-color:white">{TweakModSettingsSpeedUpNotificationsList}</div>';
+                tempHtmlNotifications += '<div id="TweakModSettingsSpeedUpNotificationsListSelectButton" class="baseButton orangeButton" style="display:'+(TweakModSettings.settings.notifications.speedUp ? '' : 'none')+'; font-size:10pt; font-weight:bold; height:20px; line-height:20px">Un-/Select all</div></td>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top" width="35%"><h3>Conference dialog</h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><select id="TweakModSettingsTabNotificationsConferenceSelect" size="1"><option value="none">Default</option><option value="speedUpConferences">Speed up</option><option value="skipConferences">Skip</option></select></td>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top"><h3>Reviews dialog</h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><select id="TweakModSettingsTabNotificationsReviewsSelect" size="1"><option value="none">Default</option><option value="speedUpReviews">Speed up</option><option value="speedUpAndOverlayReviews">Speed up + Overlay</option><option value="skipReviews">Skip</option></select></td>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '</tbody>';
+                tempHtmlNotifications += '</table>';
+        
+            var tempHtmlNotificationsContent = '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size:11px">';
             // Create a list with speedUp targets of the notifications section
+
             if(typeof TweakModSettings.settings != 'undefined' && typeof TweakModSettings.settings.notifications != 'undefined' && typeof TweakModSettings.settings.notifications.speedUpTargets != 'undefined'){
-            
                 $.each(TweakModSettings.settings.notifications.speedUpTargets, function(index, element){
-                    tempHtmlNotifications += '<tr><td valign="middle" align="left" width="20">';
-                    tempHtmlNotifications += '<input type="checkbox" id="" name="'+element.target+'" value="true" '+(element.enable ? 'checked="true"' : '')+' style="width:14px">';
-                    tempHtmlNotifications += '</td><td valign="middle" align="left">';
-                    tempHtmlNotifications += element.target;
-                    tempHtmlNotifications += '</td></tr>';
+                    tempHtmlNotificationsContent += '<tr><td valign="middle" align="left" width="20">';
+                    tempHtmlNotificationsContent += '<input type="checkbox" id="TweakModNotificationSpeedUpTarget-'+element.id+'" value="true" '+(element.asOverlay ? 'checked="true"' : '')+' style="width:14px">';
+                    tempHtmlNotificationsContent += '</td><td valign="middle" align="left">';
+                    tempHtmlNotificationsContent += element.name;
+                    tempHtmlNotificationsContent += '</td></tr>';
                     
                 });
             }
-            tempHtmlNotifications += '</table>';
-            
-            // Setup styles of notification elements
-            // $('#TweakModSettingsSpeedUpNotificationsList').css({display:this.settings.notifications.speedUp ? '' : 'none'}).append(tempHtmlNotifications);
-            // $('#TweakModSettingsSpeedUpNotificationsListSelectButton').css({display:this.settings.notifications.speedUp ? '' : 'none'});
+            tempHtmlNotificationsContent += '</table>';
+            tempHtmlNotifications = tempHtmlNotifications.replace('{TweakModSettingsSpeedUpNotificationsList}', tempHtmlNotificationsContent);
 
-            return $('#TweakModConfigurationTabNotifications').append(tempHtmlNotifications);
+            return tempHtmlNotifications;
         };
                 
         // TAB: Miscellaneous Settings Tab. Allows to control various aspects of the game
@@ -224,16 +285,15 @@ var TweakMod = {};
         self.createTabDebug = function(){
             
         };
-                
         // Setup the event handlers for the settings values related to TweakMod
         self.setupEventHandlers = function() {
-            // Event Handlers for: Settings > Norifications 
+            // Event Handlers for: Settings > Notifications 
             $('#TweakModSettingsTypeWriterDelayNumberBox').change(function(e){
                 TweakModSettings.settings.notifications.typeWriterDelay = $(e.target).val();
-
-                TweakModSettings.dataStorage.save();
-                TweakModSettings.dataStorage.apply();
+                
+                UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
             });
+
 
             $('#TweakModSettingsSpeedUpNotificationsCheckBox').change(function(e){
                 TweakModSettings.settings.notifications.speedUp = $(e.target).is(':checked');
@@ -241,30 +301,49 @@ var TweakMod = {};
                 $('#TweakModSettingsSpeedUpNotificationsList').css({display:TweakModSettings.settings.notifications.speedUp ? '' : 'none'});
                 $('#TweakModSettingsSpeedUpNotificationsListSelectButton').css({display:TweakModSettings.settings.notifications.speedUp ? '' : 'none'});
                             
-                TweakModSettings.dataStorage.save();
-                TweakModSettings.dataStorage.apply();
+                UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
             });
 
+
             $('#TweakModSettingsSpeedUpNotificationsListSelectButton').click(function(e){
-                  $('#TweakModSettingsSpeedUpNotificationsList').find('input[type=checkbox]').removeAttr('checked');
-                  
-                  if(notificationsSelectAllButtonState){
-                  }
-                  else {
-                      $('#TweakModSettingsSpeedUpNotificationsList').find('input[type=checkbox]').attr('checked', 'true');
-                  }
-                  
-                  notificationsSelectAllButtonState = !notificationsSelectAllButtonState;
+                $('#TweakModSettingsSpeedUpNotificationsList').find('input[type=checkbox]').removeAttr('checked');
+
+                if(!notificationsSelectAllButtonState){
+                    $('#TweakModSettingsSpeedUpNotificationsList').find('input[type=checkbox]').attr('checked', 'true');
+                }
+
+                notificationsSelectAllButtonState = !notificationsSelectAllButtonState;
+
+                $('#TweakModSettingsSpeedUpNotificationsCheckBox').attr('checked','true');
+
+               
+                $.each(TweakModSettings.settings.notifications.speedUpTargets, function(index, element){
+                    element.asOverlay = notificationsSelectAllButtonState;
+                    UltimateLib.Notifications.setOverlay(element);
+                });
+                
+                UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
             });
             
             // Event Handlers for: Settings > Conferences
-            $('#TweakModSettingsConferencesSelect').change(function(e){
-                TweakModSettings.settings.conferences.speedUpMode = $(e.target).val();
-                
-                TweakModSettings.dataStorage.save();
-                TweakModSettings.dataStorage.apply();
+            $('#TweakModSettingsTabNotificationsConferenceSelect').change(function(e){
+                TweakModSettings.settings.notifications.conferenceSpeedUpMode = $(e.target).val();
+                UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
             });
             
+            $('#TweakModSettingsTabNotificationsReviewsSelect').change(function(e){
+                TweakModSettings.settings.notifications.reviewSpeedUpMode = $(e.target).val();
+                UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);                
+            });
+            
+            
+            $.each(TweakModSettings.settings.notifications.speedUpTargets, function(index, element){
+                $('#TweakModNotificationSpeedUpTarget-'+element.id).change(function(e){
+                    element.asOverlay = $('#TweakModNotificationSpeedUpTarget-'+element.id).is(':checked');
+                    UltimateLib.Notifications.setOverlay(element);
+                    UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
+                });
+            });
         };           
 
         // -----------------------------
@@ -292,120 +371,64 @@ var TweakMod = {};
         
     };
     
-    var TweakModDataStorage = {};
-    (function(){
-        var self = this;
+    self.TweakModSettings =  (function () {   
+        var instance            = this;
         
-        // Unique ID for data storage
-        self.idDataStorage  = 'TweakMod';
-                
-        self.store   = GDT.getDataStore(self.idDataStorage);
-        self.settings = null;
-
-        // Create proper fields if required
-        if(!self.store){
-            self.store = self.settings;
-        }
-        
-        // Reset settings in storage
-        self.reset = function() {
-            self.store.settings = self.settings;  
-        };
-        
-        // Save settings to storage   
-        self.save = function() {
-            self.store.settings  = self.settings;  
-            self.store.data      = self.store.settings;      
+        instance.init = function(){
+            instance.settings.notifications.speedUpTargets    = UltimateLib.Notifications.Items;
+                    
+            // Now trying to read and apply already stored settings, if not, use defaults
+            var settingsFromStorage = UltimateLib.Storage.read('TweakMod', instance.settings);
             
-            DataStore.saveSettings();
-
-        };       
-        
-        // Load / Reload settings from storage
-        self.load = function() {
-            self.store = GDT.getDataStore(self.idDataStorage);
+            if(typeof settingsFromStorage !== undefined){
+                instance.settings = settingsFromStorage;
+            }  
         };
-
-        // Applies the settings from storage to this instance    
-        self.apply = function() {
-            var settings = DataStore.settings.modData[self.idDataStorage];
-        };
-        
-        return self;
-    })();
-    
-    var TweakModSettings = {};
-    (function () {   
         
         // Settings object
-        self.settings = {
+        instance.settings = {
             game:{
               gamespeed: 10  
             },
             notifications: {
-                typeWriterDelay:    hasObjNotifications    ? TweakModDataStorage.store.notifications.typeWriterDelay  : 100, 
-                speedUp:            hasObjNotifications    ? TweakModDataStorage.store.notifications.speedUp          : false,
-                speedUpTargets:     [{target:'{PlatformReleaseNews}', enable:true},
-                                     {target: 'News'.localize(), enable:true},
-                                     {target: 'Game off the market.'.localize(), enable:true},
-                                     {target: 'Game Conference'.localize(), enable:true},
-                                     {target: 'Lab report'.localize(), enable:true},
-                                     {target: 'New Research!'.localize(), enable:true},
-                                     {target: 'Industry News'.localize(), enable:true},
-                                     {target: 'Game Report'.localize(), enable:true},
-                                     {target: 'Market Analysis'.localize(), enable:true},
-                                     {target: 'Engine complete!'.localize(), enable:true},
-                                     {target: 'Game review'.localize(), enable:true},
-                                     {target: 'Sequel'.localize(), enable:true},
-                                     {target: 'Tutorial'.localize(), enable:true},
-                                     {target: 'Company\'s Best Game'.localize(), enable:true}
-                                     ],
-                conferenceSpeedUpMode:  hasObjNotifications ? TweakModDataStorage.store.notifications.conferenceSpeedUpMode   : 'none',
-                reviewSpeedUpMode:      hasObjNotifications ? TweakModDataStorage.store.notifications.reviewSpeedUpMode       : 'none'
+                typeWriterDelay:        100, 
+                speedUp:                false,
+                speedUpTargets:         {},
+                conferenceSpeedUpMode:  'none',
+                reviewSpeedUpMode:      'none'
             },
             misc: {
             },
             debug: {
-                ghg6:    hasObjDebug ? self.dataStorage.store.debug.ghg6    : 'none'
+                ghg6:   'none'
             }
             // GameFlags.ghg6 = true;
-        
             };  
-             
-        var hasObjNotifications = TweakModDataStorage.store && TweakModDataStorage.store.notifications;
-        var hasObjGame          = TweakModDataStorage.store && TweakModDataStorage.store.game;
-        var hasObjMisc          = TweakModDataStorage.store && TweakModDataStorage.store.misc;
-        var hasObjDebug         = TweakModDataStorage.store && TweakModDataStorage.store.debug;
-
-        return self;
+        
+        return instance;
     })();    
+    
+    TweakMod.init = function(){
+        self.TweakModSettings.init();
+        self.TweakedSettingsUI.setup();
+    };
+    
     // ------- Main    
     try {
-        TweakModDataStorage.settings = TweakModSettings.settings;
         
-        // Prepare the settings UI
-        tweakedSettingsUI.setup();
+        //alert(TweakModSettings.settings.game.gamespeed);
 
-        // Create an override using the jQuery proxy pattern for the relevant "typewrite" method
-        (function() {
-            var proxied = $.fn.typewrite;
-            $.fn.typewrite = function(b) {
-                b.delay = TweakModSettings.settings.notifications.typeWriterDelay;
-                return proxied.apply( this, arguments );
-            };
-        })();
-            
         // Create an override using the jQuery proxy pattern for the relevant "conferences" method
         (function() {
             var proxied = UI._startGameConferenceAnimations;
             UI._startGameConferenceAnimations = function(b, e) {
                 
-                if (TweakModSettings.settings.conferences.skip){
+                if (TweakModSettings.settings.conferenceSpeedUpMode == 'skipConferences'){
                     $('#gameConferenceAnimationDialog').find(".okButton").click();
                     return;    
                 }
 
-                if(TweakModSettings.conferences.speedUp){
+                if(TweakModSettings.settings.conferenceSpeedUpMode == 'speedUpConferences'){
                     var lastGames       = [];
                     var currentGame     = GameManager.company.getGameById(e);
                     var hasCurrentGame  = !(typeof currentGame === undefined) && !currentGame == null;
@@ -516,100 +539,6 @@ var TweakMod = {};
             };
         })();   
         
-        // Create an override using the jQuery proxy pattern for creating a custom notification overlay
-        (function() {
-            var proxied = UI._showNotification;
-            UI._showNotification = function (a, b) {
-                proxied.apply( this, arguments );
-
-                var notification = a;
-                var name   = notification.header;
-                var n      = $('#simplemodal-container').find('#notificationContent');
-                var opt    = $('.notificationOption1').first();
-                
-                var win    = $(self.notifyWindow);
-
-                $('#TweakModNotificationReplacement1').remove();
-                $('#TweakModNotificationReplacement2').remove();
-                $('#TweakModNotificationReplacement3').remove();
-
-                var window1 = $(document.createElement('div'));
-                var window2 = $(document.createElement('div'));
-                var window3 = $(document.createElement('div'));
-
-                window1.attr({id:'TweakModNotificationReplacement1'});
-                window1.appendTo($('body'));
-
-                window2.attr({id:'TweakModNotificationReplacement2'});
-                window2.appendTo($('body'));
-                
-                window3.attr({id:'TweakModNotificationReplacement3'});
-                window3.appendTo($('body'));
-
-                
-                var doc                 = $(document);
-                var docWidth            = doc.width();
-                var docHeight           = doc.height();
-                var centerX             = (docWidth * 0.5)  - (230);
-                var centerY             = (docHeight * 0.5) - (120);
-                
-                
-                window1.css({position:'absolute', left:centerX, top:centerY, width:460, height:'auto', padding:5, backgroundColor:'#f0f0f0', opacity:'0.9', border:'4px solid rgb(255,209,123)', display:'none', zIndex:8000, boxShadow:'0 0 5px #888'});
-                window2.css({position:'absolute', left:centerX, top:centerY, width:460, height:'auto', padding:5, backgroundColor:'#f0f0f0', opacity:'0.9', border:'4px solid rgb(255,209,123)', display:'none', zIndex:8000, boxShadow:'0 0 5px #888'});
-                window3.css({position:'absolute', left:centerX, top:centerY, width:460, height:'auto', padding:5, backgroundColor:'#f0f0f0', opacity:'0.9', border:'4px solid rgb(255,209,123)', display:'none', zIndex:8000, boxShadow:'0 0 5px #888'});
-                
-                 if(TweakModSettings.settings.notifications.speedUp){
-                     
-                     switch (a.header) {
-                         case "{ReleaseGame}":
-                         alert("{ReleaseGame}");
-                         break;
-                         
-                         case "{Reviews}":
-                         alert("{Reviews}");
-                         break;
-                         
-                         case "{PlatformReleaseNews}":
-                         case "News".localize():
-                         case "Game off the market.".localize():
-                         case "Game Conference".localize():
-                         case "Lab report".localize():
-                         case "New Research!".localize():
-                         case "Industry News".localize():
-                         case "Game Report".localize():
-                         case "Market Analysis".localize():
-                         case "Engine complete!".localize():
-                         case "Game review".localize():
-                         case "Sequel".localize():
-                         case "Tutorial".localize():
-                         case "Company's Best Game".localize():
-                            var html  = '<h3>'+a.header+'</h3>';
-                                html += a.text.replace('\n','<br/><br/>');
-                                
-                                if( $('#TweakModNotificationReplacement2').is(':visible') ) {
-                                    var w3t = window1.position.top() + window1.height() + 5;
-                                    window3.css({top:w3t}); 
-                                    
-                                    window3.html(html).delay(500).fadeIn().delay(4000).fadeOut();
-                                }
-                                else if( $('#TweakModNotificationReplacement1').is(':visible') ) {
-                                    var w2t = window1.position.top() + window1.height() + 5;
-                                    window2.css({top:w2t}); 
-                                    
-                                    window2.html(html).delay(500).fadeIn().delay(4000).fadeOut();
-                                }
-                                else {
-                                    window1.html(html).delay(500).fadeIn().delay(4000).fadeOut();
-                                }
-                                UI.closeModal();
-                                GameManager.company.activeNotifications.remove(a);
-                                GameManager.resume(!0);
-                         break;
-                     }
-
-                 }
-         };
-        })();  
                 
 //        // Create an override using the jQuery proxy pattern for the UI.populateSettingsPanel method. This prepares the settings UI.
 //        // Thanks to Sir Everard for pointing out
@@ -635,10 +564,10 @@ var TweakMod = {};
 //         });
 
 
-        GDT.on(GDT.eventKeys.gameplay.weekProceeded, function(e) {
-            // Apply gamespeed now, so the speed modifier applies
-            GameManager._oldTimeModifier = TweakModSettings.settings.general.gamespeed / 10;
-        });    
+//        GDT.on(GDT.eventKeys.gameplay.weekProceeded, function(e) {
+//            // Apply gamespeed now, so the speed modifier applies
+//            GameManager._oldTimeModifier = TweakModSettings.settings.general.gamespeed / 10;
+//        });    
 
         
         // The GameFlags var is frozen, so you can't edit it directly.
@@ -649,8 +578,9 @@ var TweakMod = {};
     catch(ex) {
         //var trace = this.printStackTrace({e: ex});
         
-        
+        console.log(ex);
         alert('TweakMod raised an exception!\n' + 'Message: ' + ex.message);// + '\nStack trace:\n' + trace.join('\n'));
+        
     }
     finally {
         

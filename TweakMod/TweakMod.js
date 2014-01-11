@@ -1,5 +1,6 @@
 (function () {
     var ready = function () {  
+        TweakMod.init();
     };
 
     var error = function () {
