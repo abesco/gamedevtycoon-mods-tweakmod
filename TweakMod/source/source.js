@@ -3,19 +3,20 @@ GameDevTycoon Expansion Module
 **********************************************************************************************************************************************************
 Name:                 TweakMod
 Description:          Allows to tweak various aspects of the game.
-Copyright:            © 2013 Francesco Abbattista
+Copyright:            © 2013, 2014 Francesco Abbattista
 Url:                  http://www.abesco.de/
 Notes:                None.
 Credits:              SirEverard for his contribution of the game speed control.
 **********************************************************************************************************************************************************
 Version:              0.1.0
 Launch:               December 25th, 2013
-Last Update:          December 25th, 2013
+Last Update:          January 11th, 2014
 **********************************************************************************************************************************************************
 */
 
-
-
+// This code is a mess!!! xD Need to take time and make it nice and tidy.... but it works ;)
+//
+//
 /// --> New Ideas = 
 //      ContextMenu opening time / delay (especially when a lot of mods are available)
 //      Create Right Menu system
@@ -253,7 +254,7 @@ var TweakMod = {};
                 tempHtmlNotifications += '</tr>';
                 tempHtmlNotifications += '<tr>';
                 tempHtmlNotifications += '<td align="left" valign="top"><h3>Reviews dialog</h3></td>';
-                tempHtmlNotifications += '<td align="left" valign="top"><select id="TweakModSettingsTabNotificationsReviewsSelect" size="1"><option value="none">Default</option><option value="speedUpReviews">Speed up</option><option value="speedUpAndOverlayReviews">Speed up + Overlay</option><option value="skipReviews">Skip</option></select></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><select id="TweakModSettingsTabNotificationsReviewsSelect" size="1" disabled><option value="none">Default</option><option value="speedUpReviews">Speed up</option><option value="speedUpAndOverlayReviews">Speed up + Overlay</option><option value="skipReviews">Skip</option></select></td>';
                 tempHtmlNotifications += '</tr>';
                 tempHtmlNotifications += '</tbody>';
                 tempHtmlNotifications += '</table>';
