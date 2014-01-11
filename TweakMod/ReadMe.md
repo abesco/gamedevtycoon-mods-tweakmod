@@ -11,7 +11,7 @@
 - Version Information
     - Latest:       0.1.0
     - Launch:       December 25th, 2013
-    - Last Update:  December 25th, 2013                    
+    - Last Update:  January 11th, 2014                    
 
 *************************************************************************************************
 Changelog Version
@@ -21,4 +21,5 @@ Release Date
 December 25th, 2013
 
 - First public release
+- UltimateLib required
 *************************************************************************************************

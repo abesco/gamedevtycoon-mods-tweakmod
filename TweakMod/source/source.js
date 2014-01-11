@@ -419,7 +419,33 @@ var TweakMod = {};
         
         //alert(TweakModSettings.settings.game.gamespeed);
 
-        // Create an override using the jQuery proxy pattern for the relevant "conferences" method
+        
+        // Create an override  for the relevant "new game" method        
+        (function() {
+            var proxied = UI.showNewGameView;
+            UI.showNewGameView = function (a, d) {
+                
+                var generateNameButton  = $(document.createElement('div'));
+                generateNameButton.addClass('fontCharacterButton icon-random');
+                generateNameButton.css({width:16, height:16});
+                generateNameButton.on('click', function(e){
+                    var newCompanyName = UltimateLib.NameGenerator.generateCompanyName();
+                    companyName.attr('value', newCompanyName);
+                });
+
+                proxied.apply( this, arguments );
+
+                // Allow creating a random name
+                var settingsButton      = $('#newGameView').find('div')[1];
+                var companyNameTitle    = $('#newGameViewContent').find('h2')[1];
+                var companyName         = $('#newGameViewContent').find('#companyName');
+                
+                companyName.css({width:'280px'})
+                generateNameButton.insertBefore(companyNameTitle);
+            }
+        })();
+
+        // Create an override for the relevant "conferences" method
         (function() {
             var proxied = UI._startGameConferenceAnimations;
             UI._startGameConferenceAnimations = function(b, e) {
@@ -539,8 +565,7 @@ var TweakMod = {};
 
             };
         })();   
-        
-                
+                        
 //        // Create an override using the jQuery proxy pattern for the UI.populateSettingsPanel method. This prepares the settings UI.
 //        // Thanks to Sir Everard for pointing out
 //        (function() {
