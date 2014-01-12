@@ -1,13 +1,13 @@
 {
     "id" : "TweakMod-AbescoUG",
     "name" : "TweakMod",
-    "version":"0.1.0",
+    "version":"0.1.1",
     "author":"Francesco Abbattista",
     "url":"",
-    "description" : "Expansion module that allows to tweak various aspects of the game.",
+    "description" : "Expansion module that allows to tweak various aspects of the game. Requires the UltimateLib!",
     "main" : "./TweakMod.js",
     "dependencies" : {
         "gdt-modAPI":"0.1.x",
-        "UltimateLib":"0.1.x"
+        "UltimateLib":"1.0.x"
     }
 }

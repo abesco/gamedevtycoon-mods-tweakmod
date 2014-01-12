@@ -7,10 +7,11 @@ Copyright:            © 2013, 2014 Francesco Abbattista
 Url:                  http://www.abesco.de/
 Notes:                None.
 Credits:              SirEverard for his contribution of the game speed control.
+                      PatrickKlug for supporting and helping me out.
 **********************************************************************************************************************************************************
-Version:              0.1.0
+Version:              0.1.1
 Launch:               December 25th, 2013
-Last Update:          January 11th, 2014
+Last Update:          January 12th, 2014
 **********************************************************************************************************************************************************
 */
 
@@ -425,12 +426,25 @@ var TweakMod = {};
             var proxied = UI.showNewGameView;
             UI.showNewGameView = function (a, d) {
                 
-                var generateNameButton  = $(document.createElement('div'));
-                generateNameButton.addClass('fontCharacterButton icon-random');
-                generateNameButton.css({width:16, height:16});
-                generateNameButton.on('click', function(e){
-                    var newCompanyName = UltimateLib.NameGenerator.generateCompanyName();
-                    companyName.attr('value', newCompanyName);
+                var generateCompanyNameButton   = $(document.createElement('div'));
+                generateCompanyNameButton.addClass('fontCharacterButton icon-random');
+                generateCompanyNameButton.css({width:16, height:16});
+
+                var generatePlayerNameButton =  $(document.createElement('div'));
+                generatePlayerNameButton.addClass('fontCharacterButton icon-random');
+                generatePlayerNameButton.css({width:16, height:16, marginLeft:4});
+                
+                generateCompanyNameButton.on('click', function(e){
+                    var newName = UltimateLib.NameGenerator.generateCompanyName();
+                    companyName.attr('value', newName);
+                });
+
+                generatePlayerNameButton.on('click', function(e){
+                    var sexSel  = $('#newGameViewContent').find('#characterSexSelection');
+                    var maleDiv = sexSel.find('div')[1];
+                    var isMale  = $(maleDiv).hasClass('selected');
+                    var newName = UltimateLib.NameGenerator.generatePlayerName(isMale);
+                    playerName.attr('value', newName);
                 });
 
                 proxied.apply( this, arguments );
@@ -439,9 +453,14 @@ var TweakMod = {};
                 var settingsButton      = $('#newGameView').find('div')[1];
                 var companyNameTitle    = $('#newGameViewContent').find('h2')[1];
                 var companyName         = $('#newGameViewContent').find('#companyName');
+                var companyName         = $('#newGameViewContent').find('#companyName');
+                var playerName          = $('#newGameViewContent').find('#playerName');
                 
                 companyName.css({width:'280px'})
-                generateNameButton.insertBefore(companyNameTitle);
+                playerName.css({width:'280px'})
+                
+                generateCompanyNameButton.insertBefore(companyNameTitle);
+                generatePlayerNameButton.insertAfter(playerName);
             }
         })();
 
@@ -595,7 +614,6 @@ var TweakMod = {};
 //            GameManager._oldTimeModifier = TweakModSettings.settings.general.gamespeed / 10;
 //        });    
 
-        
         // The GameFlags var is frozen, so you can't edit it directly.
         // Thanks to kristof1104 for this hint
         GameFlags = $.extend({}, GameFlags);
