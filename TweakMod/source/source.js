@@ -105,7 +105,7 @@ var TweakMod = {};
         
         self.applySettings = function(){
             // Apply typewriter
-            UltimateLib.Notifications.typeWriterDelay = TweakModSettings.settings.notifications.typeWriterDelay;
+            UltimateLib.Notifications.typeWriterDelay = {mode:'default', value: TweakModSettings.settings.notifications.typeWriterDelay};
             
             // Apply notifications speed up targets
             UltimateLib.Notifications.Items = TweakModSettings.settings.notifications.speedUpTargets;
