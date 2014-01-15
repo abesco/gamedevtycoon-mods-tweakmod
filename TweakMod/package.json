@@ -1,7 +1,7 @@
 {
     "id" : "TweakMod-AbescoUG",
     "name" : "TweakMod",
-    "version":"0.1.1",
+    "version":"0.1.2",
     "author":"Francesco Abbattista",
     "url":"",
     "description" : "Expansion module that allows to tweak various aspects of the game. Requires the UltimateLib!",
