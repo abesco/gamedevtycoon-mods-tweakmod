@@ -36,14 +36,23 @@ Changelog Version
 0.2.0
 
 Release Date
-December 25th, 2013
-
-- UltimateLib integration
-- SpeedUp dialog selection
+January 16th, 2013
 - Gamespeed control
 - Bubble speed control
 
 *********************************************************************************************************************************************************
+Changelog Version
+0.1.1
+
+Release Date
+December 11th, 2013
+
+- Fixed notification freeze on first game
+- Fixed / optimized name generation for company names
+- Name generation for player name
+
+*********************************************************************************************************************************************************
+
 Changelog Version
 0.1.0
 
