@@ -9,9 +9,9 @@ Notes:                None.
 Credits:              SirEverard for his contribution of the game speed control.
                       PatrickKlug for supporting and helping me out.
 **********************************************************************************************************************************************************
-Version:              0.1.1
+Version:              0.3.0
 Launch:               December 25th, 2013
-Last Update:          January 12th, 2014
+Last Update:          February 25th, 2014
 **********************************************************************************************************************************************************
 */
 
@@ -21,6 +21,8 @@ Last Update:          January 12th, 2014
 /// --> New Ideas = 
 //      ContextMenu opening time / delay (especially when a lot of mods are available)
 //      Create Right Menu system
+//
+// Countdown to random event - suggested by chad
 
 
 var TweakMod = {};
@@ -72,6 +74,15 @@ var TweakMod = {};
             // Create the tab contents.
             UltimateLib.Configuration.addTab('TweakModConfigurationTabNotifications', "Notifications", self.getContentTabNotifications());
 
+            // Create the misc contents.
+            UltimateLib.Configuration.addTab('TweakModConfigurationTabMisc', "Misc.", self.getContentTabMisc());
+            
+            // And creates the gamespeedslider control
+            self.createGamespeedSlider();
+            
+            // And creates the duration slider for the week
+            self.createWeekspeedSlider();
+
             // --> self.createTabMisc();
             // self.createTabDebug();
 
@@ -115,7 +126,9 @@ var TweakMod = {};
         self.updateValues = function() {
 
             // Set default values for gamespeed
-            $('#TweakModSettingsGamespeedText').html('Game Speed (Normal = 10): ' + (GameManager._oldTimeModifier * 10));
+            $('#TweakModSettingsGamespeedText').html('Game Speed<br>Normal = 10: ' + (TweakModSettings.settings.game.gamespeed));
+
+            $('#TweakModSettingsWeekspeedText').html('Week Duration<br>Normal = 4: ' + (TweakModSettings.settings.game.secondsPerWeek));
 
             // Set default values for notifications
             $('#TweakModSettingsTypeWriterDelayNumberBox').val(TweakModSettings.settings.notifications.typeWriterDelay);
@@ -143,10 +156,97 @@ var TweakMod = {};
             $('#TweakModSettingsTabNotificationsReviewsSelect').val(TweakModSettings.settings.notifications.reviewSpeedUpMode);      
             
             // Update values for game speed 
-            $("#TweakModSettingsGamespeedSlider").slider({value : TweakModSettings.settings.game.gamespeed});
+            $("#TweakModSettingsGamespeedSlider").slider({value : TweakModSettings.settings.game.gamespeed, afterSlideChange: function(e){
+                // doesn't work?
+                // alert("slider after change");
+            }});
+            
+            // Update values for week speed 
+            $("#TweakModSettingsWeekspeedSlider").slider({
+                value: TweakModSettings.settings.game.secondsPerWeek, afterSlideChange: function (e) {
+                    // doesn't work?
+                    // alert("slider after change");
+                }
+            });
 
-        };     
-                
+            $('#TweakModSettingsBubblesList > option:eq('+TweakModSettings.settings.game.bubbles+')').attr('selected', true);
+            
+            // And also the internal game speed modifier
+            // GameManager._oldTimeModifier    = TweakModSettings.settings.game.gamespeed / 10;
+            GameManager.setGameSpeed(TweakModSettings.settings.game.gamespeed / 10);
+            
+            SPAWN_POINTS_DURATION = TweakModSettings.settings.game.bubbles == 0 ? 1200 : TweakModSettings.settings.game.bubbles == 1 ? 600 : 0;
+        };
+
+
+        self.setGameLengthModifier = function (glm) {
+            if (GameManager.flags && GameManager.flags.gameLengthModifier) {
+                GameManager.flags.gameLengthModifier = glm;
+            }
+        };
+
+        
+        self.setGameSpeed = function(speed){
+            GameManager._timeModifier = speed
+            GameManager._oldTimeModifier = GameManager._timeModifier;
+        };
+                         
+        self.createGamespeedSlider = function(){
+            $("#TweakModSettingsGamespeedSlider").slider({
+                min : 5,
+                max : 100,
+                range : "min",
+                value : GameManager._oldTimeModifier * 10,
+                animate : false,
+                slide : function (event, ui) {
+                    var value = ui.value;
+                    if (isNaN(value)){
+                        value = TweakModSettings.settings.game.gamespeed;
+                    }
+                    
+                    if (!isNaN(value)){
+                        $('#TweakModSettingGamespeedText').html('Game Speed<br>Normal = 10: ' + (value));
+                        
+                        TweakModSettings.settings.game.gamespeed = value; 
+                        value = value / 10;
+                        self.setGameSpeed(value);
+                        // GameManager._oldTimeModifier = value;
+
+                    }
+
+                    
+                    UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
+
+                }
+            });
+        };
+            
+        self.createWeekspeedSlider = function () {
+            $("#TweakModSettingsWeekspeedSlider").slider({
+                min: 1,
+                max: 40,
+                range: "min",
+                value: GameManager.SECONDS_PER_WEEK,
+                animate: false,
+                slide: function (event, ui) {
+                    var value = ui.value;
+                    if (isNaN(value)) {
+                        value = TweakModSettings.settings.game.secondsPerWeek;
+                    }
+
+                    if (!isNaN(value)) {
+                        $('#TweakModSettingWeekspeedText').html('Week Duration<br>Normal = 4: ' + (value));
+
+                        TweakModSettings.settings.game.secondsPerWeek = value;
+                        GameManager.SECONDS_PER_WEEK = value;
+                    }
+
+                    UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
+
+                }
+            });
+        };
+
         // START --- Private members ---
         // -----------------------------
         
@@ -216,12 +316,12 @@ var TweakMod = {};
                     var value = ui.value;
                     if (!isNaN(value)){
                         $('#TweakModSettingsGamespeedText').html('Game Speed (Normal = 10): ' + (value));
-                        TweakModSettings.settings.general.gamespeed = value; 
+                        TweakModSettings.settings.game.gamespeed = value; 
                         value = value / 10;
                         GameManager._oldTimeModifier = value;
                     }
                     else  {
-                        GameManager._oldTimeModifier    = TweakModSettings.settings.general.gamespeed / 10;
+                        GameManager._oldTimeModifier    = TweakModSettings.settings.game.gamespeed / 10;
                     }
                     $('#xxxxx').text(value + " -- " + GameManager._oldTimeModifier);
                 }
@@ -280,8 +380,47 @@ var TweakMod = {};
         };
                 
         // TAB: Miscellaneous Settings Tab. Allows to control various aspects of the game
-        self.createTabMisc = function(){
-            
+        self.getContentTabMisc = function(){
+             
+           var tempHtmlNotifications = '<table width="100%" border="0" cellpadding="0" cellspacing="0">';
+                tempHtmlNotifications += '<tbody>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top" width="35%"><h3><div id="TweakModSettingGamespeedText">Game Speed<br>Normal = 10: '+TweakModSettings.settings.game.gamespeed+'</td></h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><div id="TweakModSettingsGamespeed"><div id="TweakModSettingsGamespeedSlider" style="top:10px"></div></div>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '<tr><td colspan="2"><hr></td></tr>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top" width="35%"><h3><div id="TweakModSettingWeekspeedText">Week Duration<br>Normal = 4: ' + TweakModSettings.settings.game.secondsPerWeek + '</td></h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><div id="TweakModSettingsWeekspeed"><div id="TweakModSettingsWeekspeedSlider" style="top:10px"></div></div>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '<tr><td colspan="2"><hr></td></tr>';
+                tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top"><h3>Bubbles</h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><h4><select id="TweakModSettingsBubblesList" size="1" name="speedUpBubbles" style="width:200px"><option value="0">Default</option><option value="1">Double speed</option><option value="2">Disable</option></select></h4>';
+                tempHtmlNotifications += '';
+                tempHtmlNotifications += '</td>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '</tbody>';
+                tempHtmlNotifications += '</table>';
+        
+            var tempHtmlNotificationsContent = '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size:11px">';
+            // Create a list with speedUp targets of the notifications section
+
+            if(typeof TweakModSettings.settings != 'undefined' && typeof TweakModSettings.settings.notifications != 'undefined' && typeof TweakModSettings.settings.notifications.speedUpTargets != 'undefined'){
+                $.each(TweakModSettings.settings.notifications.speedUpTargets, function(index, element){
+                    tempHtmlNotificationsContent += '<tr><td valign="middle" align="left" width="20">';
+                    tempHtmlNotificationsContent += '<input type="checkbox" id="TweakModNotificationSpeedUpTarget-'+element.id+'" value="true" '+(element.asOverlay ? 'checked="true"' : '')+' style="width:14px">';
+                    tempHtmlNotificationsContent += '</td><td valign="middle" align="left">';
+                    tempHtmlNotificationsContent += element.name;
+                    tempHtmlNotificationsContent += '</td></tr>';
+                    
+                });
+            }
+            tempHtmlNotificationsContent += '</table>';
+            tempHtmlNotifications = tempHtmlNotifications.replace('{TweakModSettingsSpeedUpNotificationsList}', tempHtmlNotificationsContent);
+
+                        
+            return tempHtmlNotifications;
         };
         
         self.createTabDebug = function(){
@@ -296,7 +435,6 @@ var TweakMod = {};
                 UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
             });
 
-
             $('#TweakModSettingsSpeedUpNotificationsCheckBox').change(function(e){
                 TweakModSettings.settings.notifications.speedUp = $(e.target).is(':checked');
 
@@ -305,7 +443,6 @@ var TweakMod = {};
                             
                 UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
             });
-
 
             $('#TweakModSettingsSpeedUpNotificationsListSelectButton').click(function(e){
                 $('#TweakModSettingsSpeedUpNotificationsList').find('input[type=checkbox]').removeAttr('checked');
@@ -338,6 +475,10 @@ var TweakMod = {};
                 UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);                
             });
             
+            $('#TweakModSettingsBubblesList').change(function(e){
+                    TweakModSettings.settings.game.bubbles = parseInt($(e.target).val());
+                    UltimateLib.Storage.write('TweakMod', TweakModSettings.settings); 
+            });
             
             $.each(TweakModSettings.settings.notifications.speedUpTargets, function(index, element){
                 $('#TweakModNotificationSpeedUpTarget-'+element.id).change(function(e){
@@ -390,7 +531,9 @@ var TweakMod = {};
         // Settings object
         instance.settings = {
             game:{
-              gamespeed: 10  
+              gamespeed: 10,
+              bubbles: 0,
+              secondsPerWeek: 4
             },
             notifications: {
                 typeWriterDelay:        100, 
@@ -418,9 +561,10 @@ var TweakMod = {};
     // ------- Main    
     try {
         
-        //alert(TweakModSettings.settings.game.gamespeed);
-
+        // Check for newer versions
+        UltimateLib.Update.GitHub.notifyIfNewerVersion('abesco','gamedevtycoon-mods-tweakmod', 'master','TweakMod');
         
+        console.log(GameManager.gameTime);
         // Create an override  for the relevant "new game" method        
         (function() {
             var proxied = UI.showNewGameView;
@@ -584,23 +728,28 @@ var TweakMod = {};
 
             };
         })();   
-                        
-//        // Create an override using the jQuery proxy pattern for the UI.populateSettingsPanel method. This prepares the settings UI.
-//        // Thanks to Sir Everard for pointing out
-//        (function() {
-//            var proxied = UI.populateSettingsPanel;
-//            UI.populateSettingsPanel = function(panel) {
-//                // Update values in settings UI
-//                TweakedSettingsUI.updateValues();
-//                
-//                // Apply regular method
-//                proxied.apply( this, arguments );
-//
-//                // Force first tab whenever the UI is called
-//                $('#TweakModSettingsTabGDT').tabs('select', 0);
-//            };
-//        })();
-                        
+                                  
+        // State transition override
+        (function() {
+            var proxied = GameManager.transitionToState;
+                GameManager.transitionToState = function (state) {
+                    console.log(GameManager.gameTime);
+
+                    // console.log("TransitionToState State Before: " + state + " - GameSpeed: " + GameManager._oldTimeModifier);
+                    var speed = TweakModSettings.settings.game.gamespeed / 10;
+                    if(state ==  State.Idle && GameManager._oldTimeModifier != speed){
+                        self.setGameSpeed(speed);
+                    }
+                    
+                    var bubbles = TweakModSettings.settings.game.bubbles == 0 ? 1200 : TweakModSettings.settings.game.bubbles == 1 ? 600 : 0;
+                    if (SPAWN_POINTS_DURATION != bubbles){
+                        SPAWN_POINTS_DURATION = bubbles;
+                    }
+                    proxied.apply( this, arguments );
+                    // console.log("TransitionToState State After: " + state + " - GameSpeed: " + GameManager._oldTimeModifier);
+                };
+        })();
+           
 //         GDT.on(GDT.eventKeys.ui.beforeShowingNotification, function(e) {
 //             var a = e.notification;
 //             var n = $('#simplemodal-container').find('#notificationContent');
