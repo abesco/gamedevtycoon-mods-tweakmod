@@ -9,9 +9,9 @@ Notes:                None.
 Credits:              SirEverard for his contribution of the game speed control.
                       PatrickKlug for supporting and helping me out.
 **********************************************************************************************************************************************************
-Version:              0.2.0
+Version:              0.3.0
 Launch:               December 25th, 2013
-Last Update:          January 16th, 2014
+Last Update:          February 25th, 2014
 **********************************************************************************************************************************************************
 */
 
@@ -80,6 +80,9 @@ var TweakMod = {};
             // And creates the gamespeedslider control
             self.createGamespeedSlider();
             
+            // And creates the duration slider for the week
+            self.createWeekspeedSlider();
+
             // --> self.createTabMisc();
             // self.createTabDebug();
 
@@ -125,6 +128,8 @@ var TweakMod = {};
             // Set default values for gamespeed
             $('#TweakModSettingsGamespeedText').html('Game Speed<br>Normal = 10: ' + (TweakModSettings.settings.game.gamespeed));
 
+            $('#TweakModSettingsWeekspeedText').html('Week Duration<br>Normal = 4: ' + (TweakModSettings.settings.game.secondsPerWeek));
+
             // Set default values for notifications
             $('#TweakModSettingsTypeWriterDelayNumberBox').val(TweakModSettings.settings.notifications.typeWriterDelay);
             
@@ -156,7 +161,14 @@ var TweakMod = {};
                 // alert("slider after change");
             }});
             
-            
+            // Update values for week speed 
+            $("#TweakModSettingsWeekspeedSlider").slider({
+                value: TweakModSettings.settings.game.secondsPerWeek, afterSlideChange: function (e) {
+                    // doesn't work?
+                    // alert("slider after change");
+                }
+            });
+
             $('#TweakModSettingsBubblesList > option:eq('+TweakModSettings.settings.game.bubbles+')').attr('selected', true);
             
             // And also the internal game speed modifier
@@ -164,8 +176,14 @@ var TweakMod = {};
             GameManager.setGameSpeed(TweakModSettings.settings.game.gamespeed / 10);
             
             SPAWN_POINTS_DURATION = TweakModSettings.settings.game.bubbles == 0 ? 1200 : TweakModSettings.settings.game.bubbles == 1 ? 600 : 0;
-        };     
+        };
 
+
+        self.setGameLengthModifier = function (glm) {
+            if (GameManager.flags && GameManager.flags.gameLengthModifier) {
+                GameManager.flags.gameLengthModifier = glm;
+            }
+        };
 
         
         self.setGameSpeed = function(speed){
@@ -203,7 +221,32 @@ var TweakMod = {};
             });
         };
             
-                            
+        self.createWeekspeedSlider = function () {
+            $("#TweakModSettingsWeekspeedSlider").slider({
+                min: 1,
+                max: 40,
+                range: "min",
+                value: GameManager.SECONDS_PER_WEEK,
+                animate: false,
+                slide: function (event, ui) {
+                    var value = ui.value;
+                    if (isNaN(value)) {
+                        value = TweakModSettings.settings.game.secondsPerWeek;
+                    }
+
+                    if (!isNaN(value)) {
+                        $('#TweakModSettingWeekspeedText').html('Week Duration<br>Normal = 4: ' + (value));
+
+                        TweakModSettings.settings.game.secondsPerWeek = value;
+                        GameManager.SECONDS_PER_WEEK = value;
+                    }
+
+                    UltimateLib.Storage.write('TweakMod', TweakModSettings.settings);
+
+                }
+            });
+        };
+
         // START --- Private members ---
         // -----------------------------
         
@@ -347,6 +390,11 @@ var TweakMod = {};
                 tempHtmlNotifications += '</tr>';
                 tempHtmlNotifications += '<tr><td colspan="2"><hr></td></tr>';
                 tempHtmlNotifications += '<tr>';
+                tempHtmlNotifications += '<td align="left" valign="top" width="35%"><h3><div id="TweakModSettingWeekspeedText">Week Duration<br>Normal = 4: ' + TweakModSettings.settings.game.secondsPerWeek + '</td></h3></td>';
+                tempHtmlNotifications += '<td align="left" valign="top"><div id="TweakModSettingsWeekspeed"><div id="TweakModSettingsWeekspeedSlider" style="top:10px"></div></div>';
+                tempHtmlNotifications += '</tr>';
+                tempHtmlNotifications += '<tr><td colspan="2"><hr></td></tr>';
+                tempHtmlNotifications += '<tr>';
                 tempHtmlNotifications += '<td align="left" valign="top"><h3>Bubbles</h3></td>';
                 tempHtmlNotifications += '<td align="left" valign="top"><h4><select id="TweakModSettingsBubblesList" size="1" name="speedUpBubbles" style="width:200px"><option value="0">Default</option><option value="1">Double speed</option><option value="2">Disable</option></select></h4>';
                 tempHtmlNotifications += '';
@@ -484,7 +532,8 @@ var TweakMod = {};
         instance.settings = {
             game:{
               gamespeed: 10,
-              bubbles:0
+              bubbles: 0,
+              secondsPerWeek: 4
             },
             notifications: {
                 typeWriterDelay:        100, 
